@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-itunes-app" content="app-id=id921966900, app-argument=seinet://home" />
+  <title>Install Banner SEINet</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background-color: #f5f5f5;
+    }
+
+    #installBanner {
+      display: none;
+      background: rgb(245, 89, 61);
+      color: #fff;
+      padding: 20px 30px;
+      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translate(-50%, 100%);
+      transition: transform 0.6s ease, opacity 0.6s ease;
+      opacity: 0;
+      z-index: 1000;
+      min-width: 300px;
+    }
+
+    #installBanner.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    #installBanner p {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+    }
+
+    #installBanner button,
+    #installBanner a > button {
+      background: #fff;
+      color: rgb(245, 89, 61);
+      padding: 10px 20px;
+      border: none;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 140px;
+      height: 40px;
+      transition: background 0.3s ease;
+    }
+
+    #installBanner button:hover {
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to SEINet test page</h1>
+
+  <div id="installBanner"></div>
+
+  <script>
+    const banner = document.getElementById('installBanner');
+    let deferredPrompt = null;
+
+    function setCookie(name, value, days) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+    }
+
+    function getCookie(name) {
+      return document.cookie.split('; ').some(row => row.startsWith(name + '='));
+    }
+
+    function showBanner(contentHTML) {
+      banner.innerHTML = contentHTML;
+      banner.style.display = 'block';
+      setTimeout(() => banner.classList.add('show'), 100);
+
+      const cancelBtn = document.getElementById('cancelBtn');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          setCookie('installBannerDismissed', 'true', 3);
+          banner.classList.remove('show');
+          setTimeout(() => (banner.style.display = 'none'), 500);
+        });
+      }
+    }
+
+    if (!getCookie('installBannerDismissed')) {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+	  
+	  alert("User Agent: " + ua);
+	  
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
+      const isAndroid = /android/i.test(ua);
+      const isHuawei = /huawei|honor/i.test(ua);
+
+      if (isIOS) {
+        showBanner(`
+          <p>Install our app from the App Store</p>
+          <a href="https://apps.apple.com/mk/app/seinet/id921966900" target="_blank" rel="noopener noreferrer">
+            <button>Install on iOS</button>
+          </a>
+          <button id="cancelBtn">Cancel</button>
+        `);
+      } else if (isHuawei) {
+        showBanner(`
+          <p>Install our app from the Huawei AppGallery</p>
+          <a href="https://appgallery.huawei.com/app/C113958025" target="_blank" rel="noopener noreferrer">
+            <button>Install on Huawei</button>
+          </a>
+          <button id="cancelBtn">Cancel</button>
+        `);
+      } else if (isAndroid) {
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+
+          showBanner(`
+            <p>Install our app on your device</p>
+            <button id="installBtn">Install</button>
+            <button id="cancelBtn">Cancel</button>
+          `);
+
+          document.getElementById('installBtn').addEventListener('click', () => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+              deferredPrompt = null;
+              banner.classList.remove('show');
+              setTimeout(() => (banner.style.display = 'none'), 500);
+            });
+          });
+        });
+
+        // Fallback if prompt doesn't appear
+        setTimeout(() => {
+          if (!deferredPrompt) {
+            showBanner(`
+              <p>Install our app from the Google Play Store</p>
+              <a href="https://play.google.com/store/apps/details?id=com.mse.seinet" target="_blank" rel="noopener noreferrer">
+                <button>Install on Android</button>
+              </a>
+              <button id="cancelBtn">Cancel</button>
+            `);
+          }
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+</html>
